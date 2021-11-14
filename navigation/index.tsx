@@ -12,12 +12,14 @@ import { ColorSchemeName, Pressable } from 'react-native';
 
 import Colors from '../constants/Colors';
 import useColorScheme from '../hooks/useColorScheme';
-import ModalScreen from '../screens/ModalScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
 import ScheduleScreen from '../screens/ScheduleScreen';
 import TabTwoScreen from '../screens/TabTwoScreen';
 import { RootStackParamList, RootTabParamList, RootTabScreenProps } from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
+import { useSelector } from 'react-redux';
+import { RootState } from '../rdx';
 
 export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeName }) {
   return (
@@ -41,7 +43,7 @@ function RootNavigator() {
       <Stack.Screen name="Root" component={BottomTabNavigator} options={{ headerShown: false }} />
       <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />
       <Stack.Group screenOptions={{ presentation: 'modal' }}>
-        <Stack.Screen name="Modal" component={ModalScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
       </Stack.Group>
     </Stack.Navigator>
   );
@@ -55,6 +57,9 @@ const BottomTab = createBottomTabNavigator<RootTabParamList>();
 
 function BottomTabNavigator() {
   const colorScheme = useColorScheme();
+  const { selectedGroupId, groups } = useSelector((state: RootState) => state.generalData);
+  const group = groups.find(g => g.id === selectedGroupId)?.name;
+  const scheduleScreenTitle = `Schedule ${groups.find(g => g.id === selectedGroupId)?.name || ''}`;
 
   return (
     <BottomTab.Navigator
@@ -66,16 +71,16 @@ function BottomTabNavigator() {
         name="Schedule"
         component={ScheduleScreen}
         options={({ navigation }: RootTabScreenProps<'Schedule'>) => ({
-          title: 'Schedule',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: scheduleScreenTitle,
+          tabBarIcon: ({ color }) => <TabBarIcon name="calendar-check-o" color={color} />,
           headerRight: () => (
             <Pressable
-              onPress={() => navigation.navigate('Modal')}
+              onPress={() => navigation.navigate('Settings')}
               style={({ pressed }) => ({
                 opacity: pressed ? 0.5 : 1,
               })}>
               <FontAwesome
-                name="info-circle"
+                name="edit"
                 size={25}
                 color={Colors[colorScheme].text}
                 style={{ marginRight: 15 }}

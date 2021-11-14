@@ -5,9 +5,11 @@ interface IOrigin {
 
 export const MODE: keyof IOrigin = (process.env.NODE_ENV || 'local') as keyof IOrigin;
 
+const IPv4 = '192.168.0.110';
+
 const API_ORIGIN: IOrigin = {
-  local: 'http://192.168.0.102:5000/api',
-  development: 'http://192.168.0.102:5000/api',
+  local: `http://${IPv4}:5000/api`,
+  development: `http://${IPv4}:5000/api`,
 };
 
 export const global = {

@@ -1,22 +1,27 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Text } from 'react-native';
-import PickerComponent from '../components/picker/picker';
+import { useSelector } from 'react-redux';
+import { Loader } from '../components/loader';
 import { Schedule } from '../components/schedule';
-import { IGroup, ITimeTable } from '../lib/types/models';
+import { useActions } from '../hooks/useActions';
+import { RootState } from '../rdx';
+import { setGroupSchedule } from '../rdx/cache/actions';
+import { setGroups } from '../rdx/general-data/actions';
 
 import Api from '../services/api';
-import { RootTabScreenProps } from '../types';
 
-const ScheduleScreen = ({ navigation }: RootTabScreenProps<'Schedule'>) => {
+const ScheduleScreen = () => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [groups, setGroups] = useState<IGroup[]>([]);
-  const [data, setData] = useState<ITimeTable[]>([]);
-  const [selectedValue, setSelectedValue] = useState<string | null>(null);
+  const selectedGroupId = useSelector((state: RootState) => state.generalData.selectedGroupId);
 
-  const requestWrapper = useCallback(async (cb: () => Promise<void>) => {
+  const setGroupsAction = useActions(setGroups);
+  const setGroupScheduleAction = useActions(setGroupSchedule);
+
+  const initializeState = useCallback(async () => {
     try {
       setLoading(true);
-      await cb();
+      const response = await Api.group.getGroups();
+      setGroupsAction(response);
     } catch (e) {
       console.log(e);
     } finally {
@@ -24,28 +29,34 @@ const ScheduleScreen = ({ navigation }: RootTabScreenProps<'Schedule'>) => {
     }
   }, []);
 
-  const getTimeTableByGroupId = useCallback((groupId: number) =>
-    requestWrapper(async () => {
-      const response = await Api.timeTable.getTimeTableByGroup(groupId);
-      setData(response);
-    }), [requestWrapper]);
+  const setSchedule = useCallback(async () => {
+    if (!selectedGroupId) return;
+    try {
+      setLoading(true);
+      const response = await Api.timeTable.getTimeTableByGroup(selectedGroupId);
+      setGroupScheduleAction(selectedGroupId, response);
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedGroupId]);
 
   useEffect(() => {
-    requestWrapper(async () => {
-      const response = await Api.group.getGroups();
-      console.log(response)
-      setGroups(response);
-    })
-  }, [requestWrapper]);
+    initializeState();
+  }, [initializeState]);
+
+  useEffect(() => {
+    setSchedule();
+  }, [setSchedule]);
 
   return (
     <>
-      <PickerComponent
-        selectedValue={selectedValue}
-        setSelectedValue={setSelectedValue}
-        values={groups.map(g => g.name)}
-      />
-      {/* {loading ? <Text>Loading...</Text> : <Schedule data={data} />} */}
+      {selectedGroupId
+        ? <Schedule groupId={selectedGroupId} />
+        : <Text>Please select a group to display the schedule</Text>
+      }
+      <Loader size="large" color={'#0000ff'} loading={loading} />
     </>
   );
 }

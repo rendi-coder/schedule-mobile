@@ -1,0 +1,1 @@
+export const SET_GROUP_SCHEDULE = 'SET_GROUP_SCHEDULE';

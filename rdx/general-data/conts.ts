@@ -1,0 +1,2 @@
+export const SET_GROUPS = 'SET_GROUPS';
+export const SET_SELECTED_GROUP_ID = 'SET_SELECTED_GROUP_ID';
