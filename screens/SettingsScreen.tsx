@@ -38,28 +38,30 @@ export default function SettingsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.root}>
-      <Text style={styles.text}>Select a group to display the schedule</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder={'Search by groups'}
-          style={styles.text}
-          onChangeText={(text) => {
-            autocompleteHandler(text);
-          }}
-          defaultValue={searchState}
-        />
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={styles.root}>
+        <Text style={styles.text}>Select a group to display the schedule</Text>
+        <View style={styles.inputContainer}>
+          <TextInput
+            placeholder={'Search by groups'}
+            style={styles.text}
+            onChangeText={(text) => {
+              autocompleteHandler(text);
+            }}
+            defaultValue={searchState}
+          />
+        </View>
+        <ScrollView
+          style={styles.list}
+          showsVerticalScrollIndicator={false}
+          scrollIndicatorInsets={{ top: 1, bottom: 1100 }}
+        >
+          {filteredList.length
+            ? filteredList.map((group, i) => <Item key={group.name + i} group={group} />)
+            : <Text style={[styles.text, { color: 'red' }]}>Group Not found</Text>
+          }
+        </ScrollView>
       </View>
-      <ScrollView
-        style={styles.list}
-        showsVerticalScrollIndicator={false}
-        scrollIndicatorInsets={{ top: 1, bottom: 1100 }}
-      >
-        {filteredList.length
-          ? filteredList.map((group, i) => <Item key={group.name + i} group={group} />)
-          : <Text style={[styles.text, { color: 'red' }]}>Group Not found</Text>
-        }
-      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -81,18 +83,18 @@ const styles = StyleSheet.create({
     borderRadius: 8
   },
   checkBox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     borderColor: '#e2e2e2',
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center'
   },
   checkMark: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: '#47bd8d'
   },
   inputContainer: {

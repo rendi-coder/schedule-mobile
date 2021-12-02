@@ -1,12 +1,16 @@
 import { FontAwesome } from '@expo/vector-icons';
-import React from 'react';
-import { View, Text, SectionList } from 'react-native';
+import { useNavigation } from '@react-navigation/core';
+import React, { useState } from 'react';
+import { View, Text, SectionList, RefreshControl } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useSelector } from 'react-redux';
 import { DAYS_OF_WEEK } from '../../constants/dayOfWeek';
 import { LESSONS_INFO } from '../../constants/lessons';
+import { useActions } from '../../hooks/useActions';
 import { ITimeTable } from '../../lib/types/models';
 import { RootState } from '../../rdx';
+import { setGroupSchedule } from '../../rdx/cache/actions';
+import Api from '../../services/api';
 import { styles } from './schedule.styles';
 
 interface IScheduleProps {
@@ -25,30 +29,53 @@ interface TSection {
 
 export const Schedule: React.FC<IScheduleProps> = ({ groupId }) => {
     const groups = useSelector((state: RootState) => state.cache.groups);
+    const [loading, setLoading] = useState(false);
+    const navigation = useNavigation();
 
+    const setGroupScheduleAction = useActions(setGroupSchedule);
+    
     const ItemSeparator = () => (
         <View style={styles.listItemSeparatorStyle} />
     );
+
+    const onRefresh = async () => {
+        try {
+            setLoading(true);
+            const response = await Api.timeTable.getTimeTableByGroup(groupId);
+            setGroupScheduleAction(groupId, response);
+        } catch (e) {
+            console.log(e);
+        }
+        finally {
+            setLoading(false);
+        }
+    }
 
     const Item = ({ item }: { item: ITimeTable | IEmptyLesson }) => {
         const { lesson, discipline, teacher = { surname: '', name: '' } } = item as ITimeTable;
         const startTime = lesson ? lesson.startTime : (item as IEmptyLesson).startTime;
         const endTime = lesson ? lesson.endTime : (item as IEmptyLesson).endTime;
 
-        return <TouchableOpacity activeOpacity={1} style={styles.sectionListItemStyle}>
-            <View style={styles.itemTimeStyles}>
-                <Text>{startTime}</Text>
-                <Text>{endTime}</Text>
-            </View>
-            {discipline ?
-                <View style={styles.disciplineInfo}>
-                    <Text style={styles.disciplineName}>{discipline.name}</Text>
-                    <Text style={styles.teacherName}>{teacher.surname} {teacher.name}</Text>
+        return (
+            <TouchableOpacity
+                activeOpacity={lesson ? 0.5 : 1}
+                style={styles.sectionListItemStyle}
+                onPress={() => lesson && navigation.navigate("LessonDetails", { groupId, timeTableId: (item as ITimeTable).id } as any)}
+            >
+                <View style={styles.itemTimeStyles}>
+                    <Text>{startTime}</Text>
+                    <Text>{endTime}</Text>
                 </View>
-                : <View style={styles.emptyIconContainer}>
-                    <FontAwesome size={24} name="calendar-minus-o" color="#c8c8c8" />
-                </View>}
-        </TouchableOpacity>
+                {discipline ?
+                    <View style={styles.disciplineInfo}>
+                        <Text style={styles.disciplineName}>{discipline.name}</Text>
+                        <Text style={styles.teacherName}>{teacher.surname} {teacher.name}</Text>
+                    </View>
+                    : <View style={styles.emptyIconContainer}>
+                        <FontAwesome size={24} name="calendar-minus-o" color="#c8c8c8" />
+                    </View>}
+            </TouchableOpacity>
+        )
     }
 
     const renderNoContent = ({ section }: { section: TSection }) => {
@@ -67,6 +94,12 @@ export const Schedule: React.FC<IScheduleProps> = ({ groupId }) => {
                     <Text style={styles.sectionHeaderStyle}>{section.title}</Text>
                 )}
                 renderSectionFooter={renderNoContent}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={loading}
+                        onRefresh={onRefresh}
+                    />
+                }
                 renderItem={Item}
                 keyExtractor={(_, index) => index.toString()}
                 showsVerticalScrollIndicator={false}
