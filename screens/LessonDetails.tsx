@@ -1,7 +1,6 @@
 import { useRoute } from '@react-navigation/core';
 import React from 'react';
 import { SectionList, Text, View, StyleSheet } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
 import { useSelector } from 'react-redux';
 import { IArticle, ITimeTable } from '../lib/types/models';
 import { RootState } from '../rdx';
@@ -17,9 +16,9 @@ const LessonDetailsScreen = () => {
     );
 
     const Item = ({ item }: { item: { text: string } }) => (
-        <Text style={styles.itemStyles}>{item.text}</Text>
+        <Text style={styles.itemStyles}>{item.text.trim()}</Text>
     )
-
+    
     const generateSections = (articles: IArticle[]) => {
         const transformStrToDate = (date: string) => {
             const [d, m, y] = date.split('.');
@@ -60,6 +59,7 @@ const styles = StyleSheet.create({
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-between',
+        flexWrap: 'wrap',
         paddingVertical: 5,
         paddingHorizontal: 10,
         backgroundColor: '#f0f0f0',
